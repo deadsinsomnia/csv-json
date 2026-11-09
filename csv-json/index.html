@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>CSV to JSON</title>
+</head>
+<body>
+    <h1>Maurice Jude Fontanosa</h1>
+    <h3><i>IT 3206N [MW 6:00 - 8:30]</i></h3>
+
+    <br>
+
+    <h1>CSV to JSON</h1>
+
+    <h2>1. Upload CSV</h2>
+    <input type="file" id="csvFile" accept=".csv">
+    <button onclick="convertCSV()">Convert CSV to JSON</button>
+
+    <h2>2. JSON Display</h2>
+    <pre id="jsonOutput">Upload a CSV file and click Convert CSV to JSON.</pre>
+
+    <h2>3. Download JSON File</h2>
+    <button onclick="downloadJSON()" id="downloadButton" disabled>Download JSON</button>
+
+    <script>
+        let jsonData = [];
+
+        function convertCSV() {
+            let file = document.getElementById("csvFile").files[0];
+
+            if (!file) {
+                alert("Please choose a CSV file first.");
+                return;
+            }
+
+            let reader = new FileReader();
+
+            reader.onload = function(event) {
+                let lines = event.target.result.trim().split(/\r?\n/);
+                let headers = lines[0].split(",");
+                jsonData = [];
+
+                for (let i = 1; i < lines.length; i++) {
+                    if (lines[i].trim() === "") {
+                        continue;
+                    }
+
+                    let values = lines[i].split(",");
+                    let student = {};
+
+                    for (let j = 0; j < headers.length; j++) {
+                        student[headers[j].trim()] = values[j] ? values[j].trim() : "";
+                    }
+
+                    let courseName = "";
+
+                    if (student.course === "BSIT") {
+                        courseName = "Bachelor of Science in Information Technology";
+                    } else if (student.course === "BSCS") {
+                        courseName = "Bachelor of Science in Computer Science";
+                    } else {
+                        courseName = student.course;
+                    }
+
+                    jsonData.push({
+                        studentId: parseInt(student.student_id),
+                        firstName: student.first_name.charAt(0).toUpperCase() + student.first_name.slice(1).toLowerCase(),
+                        lastName: student.last_name.charAt(0).toUpperCase() + student.last_name.slice(1).toLowerCase(),
+                        program: courseName,
+                        yearLevel: parseInt(student.year_level),
+                        emailAddress: student.email.toLowerCase(),
+                        outstandingBalance: parseFloat(Number(student.tuition_balance).toFixed(2))
+                    });
+                }
+
+                document.getElementById("jsonOutput").textContent = JSON.stringify(jsonData, null, 4);
+                document.getElementById("downloadButton").disabled = false;
+            };
+
+            reader.readAsText(file);
+        }
+
+        function downloadJSON() {
+            if (jsonData.length === 0) {
+                alert("Please convert a CSV file first.");
+                return;
+            }
+
+            let fileData = JSON.stringify(jsonData, null, 4);
+            let blob = new Blob([fileData], { type: "application/json" });
+            let link = document.createElement("a");
+
+            link.href = URL.createObjectURL(blob);
+            link.download = "students.json";
+            link.click();
+
+            URL.revokeObjectURL(link.href);
+        }
+    </script>
+</body>
+</html>
